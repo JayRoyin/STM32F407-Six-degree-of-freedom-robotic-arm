@@ -1,0 +1,97 @@
+#include "key.h"
+void KEY_ROW_MOD_IN(void)
+{
+	GPIO_InitTypeDef GPIO_INIT;
+	__HAL_RCC_GPIOC_CLK_ENABLE();//使能
+	GPIO_INIT.Pin=GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_7|GPIO_PIN_11;
+	GPIO_INIT.Mode=GPIO_MODE_INPUT;//输入
+	GPIO_INIT.Pull=GPIO_PULLUP;//上拉
+	GPIO_INIT.Speed=GPIO_SPEED_FREQ_LOW;//低速
+	HAL_GPIO_Init(GPIOC,&GPIO_INIT);
+}
+void KEY_COL_MOD_IN(void)
+{
+	GPIO_InitTypeDef GPIO_INIT;
+	__HAL_RCC_GPIOB_CLK_ENABLE();//使能
+	GPIO_INIT.Pin=GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7;
+	GPIO_INIT.Mode=GPIO_MODE_INPUT;//输入
+	GPIO_INIT.Pull=GPIO_PULLUP;//上拉
+	GPIO_INIT.Speed=GPIO_SPEED_FREQ_LOW;//低速
+	HAL_GPIO_Init(GPIOB,&GPIO_INIT);
+}
+void KEY_ROW_MOD_OUT(void)
+{
+	GPIO_InitTypeDef GPIO_INIT;
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	GPIO_INIT.Pin=GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_7|GPIO_PIN_11;
+	GPIO_INIT.Mode=GPIO_MODE_OUTPUT_PP;
+	GPIO_INIT.Pull=GPIO_NOPULL;
+	GPIO_INIT.Speed=GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOC,&GPIO_INIT);
+}
+void KEY_COL_MOD_OUT(void)
+{
+	GPIO_InitTypeDef GPIO_INIT;
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	GPIO_INIT.Pin=GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7;
+	GPIO_INIT.Mode=GPIO_MODE_OUTPUT_PP;
+	GPIO_INIT.Pull=GPIO_NOPULL;
+	GPIO_INIT.Speed=GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOB,&GPIO_INIT);
+}
+void KEY_COL_OUT(uint8_t i)
+{
+	if(i==1)
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7,GPIO_PIN_SET);
+	else
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7,GPIO_PIN_RESET);
+}
+void KEY_ROW_OUT(uint8_t i)
+{
+	if(i==1)
+		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_7|GPIO_PIN_11,GPIO_PIN_SET);
+	else
+		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_7|GPIO_PIN_11,GPIO_PIN_RESET);
+}
+uint8_t KEY_ROW_RED(void)
+{
+	KEY_ROW_MOD_IN();
+	KEY_COL_MOD_OUT();
+	KEY_COL_OUT(0);
+	if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8)==0)
+		return 1;
+	if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_9)==0)
+		return 2;
+	if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_7)==0)
+		return 3;
+	if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_11)==0)
+		return 4;
+	else
+		return 0;
+}
+uint8_t KEY_COL_RED(void)
+{
+	KEY_COL_MOD_IN();
+	KEY_ROW_MOD_OUT();
+	KEY_ROW_OUT(0);
+	if(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_0)==0)
+		return 1;
+	if(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_1)==0)
+		return 2;
+	if(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_6)==0)
+		return 3;
+	if(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_7)==0)
+		return 4;
+	else
+		return 0;
+}
+uint8_t KEY_SCAN(void)
+{
+	uint8_t row=0;
+	uint8_t col=0;
+	row=KEY_ROW_RED();
+	col=KEY_COL_RED();
+	if(row==0||col==0)
+		return 0;
+	return (col+(row-1)*4);
+}
